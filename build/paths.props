@@ -1,0 +1,8 @@
+﻿<Project>
+    <PropertyGroup>
+        <!-- Paths and conditions -->
+        <S1MonoDir>C:\Games\Schedule I\S1-files\Schedule I Mono</S1MonoDir>
+        <S1CPPDir>C:\Games\Schedule I\S1-files\Schedule I IL2CPP</S1CPPDir>
+        <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+    </PropertyGroup>
+</Project>

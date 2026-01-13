@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BusinessEmployment", "BusinessEmployment.csproj", "{CCAAF8D6-4F26-4189-8DBF-C1E65F523712}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		IL2CPP|Any CPU = IL2CPP|Any CPU
+		Mono|Any CPU = Mono|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CCAAF8D6-4F26-4189-8DBF-C1E65F523712}.IL2CPP|Any CPU.ActiveCfg = IL2CPP|Any CPU
+		{CCAAF8D6-4F26-4189-8DBF-C1E65F523712}.IL2CPP|Any CPU.Build.0 = IL2CPP|Any CPU
+		{CCAAF8D6-4F26-4189-8DBF-C1E65F523712}.Mono|Any CPU.ActiveCfg = Mono|Any CPU
+		{CCAAF8D6-4F26-4189-8DBF-C1E65F523712}.Mono|Any CPU.Build.0 = Mono|Any CPU
+	EndGlobalSection
+EndGlobal
