@@ -14,20 +14,15 @@ namespace BusinessEmployment.Behaviours;
 public class LaunderBehaviour
 {
     // Registry keyed by employee
-    private static readonly Dictionary<Packager, LaunderBehaviour> _instances
-        = new Dictionary<Packager, LaunderBehaviour>();
+    private static readonly Dictionary<Packager, LaunderBehaviour> _instances = new();
 
-    private static readonly Func<PlaceableStorageEntity?, bool> SafePredicate = pse =>
-        pse?.StorageEntity != null &&
-        pse.StorageEntity.ItemSlots?.Count == SafeCreator.SLOT_COUNT &&
-        pse.StorageEntity.transform.Find("Safe") != null;
-    
     private readonly Packager employee;
     private readonly Property property;
     private Business propertyAsBusiness;
     private ELaunderEmployeeState state = ELaunderEmployeeState.Idle;
     private PlaceableStorageEntity? currentSE;
     private LaunderingStation? station;
+
     public LaunderBehaviourSaveData SaveData;
 
     private LaunderBehaviour(Packager employee)
@@ -39,7 +34,7 @@ public class LaunderBehaviour
             if (business == null) Melon<BusinessEmployment>.Logger.Error("Property cannot be cast to business!");
             propertyAsBusiness = business;
         }
-        else 
+        else
             Melon<BusinessEmployment>.Logger.Error("Property cannot be cast to business!");
 
         var propertyCode = property.PropertyCode;
@@ -62,17 +57,12 @@ public class LaunderBehaviour
 
         CleanupNullEmployees();
 
-        if (_instances.TryGetValue(employee, out var behaviour)) 
+        if (_instances.TryGetValue(employee, out var behaviour))
             return behaviour;
-            
+
         behaviour = new LaunderBehaviour(employee);
         _instances[employee] = behaviour;
         return behaviour;
-    }
-
-    public static LaunderBehaviour FindByProperty(Property property)
-    {
-        return _instances.Values.FirstOrDefault(behaviour => behaviour.property == property);
     }
 
     public static void Tick(Packager employee)
@@ -83,10 +73,20 @@ public class LaunderBehaviour
 
     private void Tick()
     {
-        if (!IsValidState() || !employee.CanWork() || propertyAsBusiness.currentLaunderTotal >= propertyAsBusiness.LaunderCapacity)
+        if (!IsValidState())
         {
             SetIdleAndWaitOutside();
             return;
+        }
+
+        // Allow active states to complete before checking work status
+        if (state == ELaunderEmployeeState.Idle)
+        {
+            if (!employee.CanWork() || propertyAsBusiness.currentLaunderTotal >= propertyAsBusiness.LaunderCapacity)
+            {
+                SetIdleAndWaitOutside();
+                return;
+            }
         }
 
         ProcessCurrentState();
@@ -126,7 +126,7 @@ public class LaunderBehaviour
 
     private void HandleIdleState()
     {
-        if (SaveData.MoneyLeftToLaunder > 0 && 
+        if (SaveData.MoneyLeftToLaunder > 0 &&
             propertyAsBusiness.currentLaunderTotal < propertyAsBusiness.LaunderCapacity)
         {
             if (EnsureLaunderingStationExists())
@@ -136,7 +136,7 @@ public class LaunderBehaviour
                 return;
             }
         }
-        
+
         var storages = GetAllStoragesWithCash().ToList();
         if (!storages.Any())
         {
@@ -168,7 +168,7 @@ public class LaunderBehaviour
             if (employee.Movement.CanGetTo(accessPoint.position))
                 return accessPoint.position;
         }
-        
+
         return null;
     }
 
@@ -184,7 +184,7 @@ public class LaunderBehaviour
         }
 
         CollectCashFromStorage();
-        
+
         if (!EnsureLaunderingStationExists())
         {
             state = ELaunderEmployeeState.Idle;
@@ -199,13 +199,17 @@ public class LaunderBehaviour
         if (currentSE?.StorageEntity?.ItemSlots == null)
             return;
 
-        foreach (var itemSlot in currentSE.StorageEntity.ItemSlots)
+        var itemSlots = currentSE.StorageEntity.ItemSlots;
+        for (var i = 0; i < itemSlots.Count; i++)
         {
-            if (Utils.Is<CashInstance>(itemSlot.ItemInstance, out var cashInstance))
+            if (Utils.Is<CashInstance>(itemSlots[i].ItemInstance, out var cashInstance))
             {
+                currentSE.StorageEntity.SetSlotLocked(null, i, true, employee.NetworkObject, "Taking out items");
                 if (cashInstance != null)
                     WithdrawForLaunder(propertyAsBusiness.LaunderCapacity, cashInstance);
             }
+
+            currentSE.StorageEntity.SetSlotLocked(null, i, false, employee.NetworkObject, "Taking out items");
 
             if (SaveData.MoneyLeftToLaunder >= propertyAsBusiness.LaunderCapacity)
                 break;
@@ -224,18 +228,17 @@ public class LaunderBehaviour
         if (station != null) return true;
         Melon<BusinessEmployment>.Logger.Error("Laundering station not found!");
         return false;
-
     }
 
     private void MoveToLaunderingStation()
     {
         if (station == null)
             return;
-        
-        var targetPosition = station.BoundingCollider != null 
+
+        var targetPosition = station.BoundingCollider != null
             ? station.BoundingCollider.bounds.ClosestPoint(employee.transform.position)
             : station.transform.position;
-            
+
         employee.Movement.GetClosestReachablePoint(targetPosition, out var point);
         employee.SetDestination(point);
         currentSE = null;
@@ -255,6 +258,7 @@ public class LaunderBehaviour
             propertyAsBusiness.StartLaunderingOperation(toDeposit);
             SaveData.MoneyLeftToLaunder -= toDeposit;
         }
+
         state = ELaunderEmployeeState.Idle;
     }
 
@@ -264,31 +268,35 @@ public class LaunderBehaviour
 
         if (shortfall <= 0 || cashInstance.Balance <= 0)
             return;
-            
+
         var toTake = Math.Min(shortfall, cashInstance.Balance);
-        
+
         employee.SetAnimationTrigger_Networked(null, "GrabItem");
         cashInstance.ChangeBalance(-toTake);
         SaveData.MoneyLeftToLaunder += toTake;
     }
 
-    public IEnumerable<PlaceableStorageEntity?> GetAllStoragesWithCash(bool onlySafes = false)
+    public IEnumerable<PlaceableStorageEntity?> GetAllStoragesWithCash()
     {
         var storages = property.BuildableItems
             .Select(bi => Utils.Is<PlaceableStorageEntity>(bi, out var r) ? r : null)
             .Where(r => r != null)
             .Where(pse => pse.StorageEntity != employee.GetHome().Storage)
             .Where(pse => pse.OutputSlots.Any(os => os.ItemInstance is CashInstance))
-            .OrderBy(SafePredicate); // Safes last (false < true)
+            .OrderBy(pse =>
+                pse?.StorageEntity != null &&
+                pse.StorageEntity.ItemSlots?.Count == SafeCreator.SLOT_COUNT &&
+                pse.StorageEntity.transform.Find("Safe") != null
+            ); // Safes last (false < true)
 
-        return onlySafes ? storages.Where(SafePredicate) : storages;
+        return storages;
     }
-    
+
     public static void Remove(Packager employee)
     {
         _instances.Remove(employee);
     }
-    
+
     private static void CleanupNullEmployees()
     {
         var toRemove = _instances.Keys
