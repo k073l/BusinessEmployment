@@ -23,6 +23,7 @@
         <!--<ModList Include="$(CommonDir)\Mods\DisclaimerSkipIL2CPP.dll" />-->
     
       <PackageReference Include="S1API.Forked" Version="2.9.2" />
+      <EmbeddedResource Include="assets\safe_icon.png"/>
     </ItemGroup>
 
     <PropertyGroup Condition="'$(Configuration)' == 'Mono'">

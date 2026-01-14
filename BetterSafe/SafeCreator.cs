@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Reflection;
 using BusinessEmployment.Helpers;
 using MelonLoader;
 using S1API.Building;
@@ -6,6 +7,7 @@ using S1API.Items;
 using S1API.Rendering;
 using S1API.Shops;
 using S1API.Storage;
+using S1API.Utils;
 using UnityEngine;
 using S1Storage = ScheduleOne.Storage;
 
@@ -30,6 +32,7 @@ public class SafeCreator
         var safeItem = BuildableItemCreator.CloneFrom("safe")
             .WithBasicInfo(SAFE_ID, SAFE_NAME, "An upgraded version of the safe. Can hold only cash.")
             .WithPricing(SAFE_PRICE)
+            .WithIcon(LoadIcon())
             .Build();
         // Wire up events
         BuildEvents.OnBuildableItemInitialized += ItemBuilt;
@@ -94,7 +97,7 @@ public class SafeCreator
 
     private static void ItemBuilt(BuildEventArgs args)
     {
-        if (args != null && SafeCreated)
+        if (SafeCreated && args is { ItemId: SAFE_ID })
         {
             MaterialHelper.ReplaceMaterials(
                 args.GameObject,
@@ -110,5 +113,13 @@ public class SafeCreator
                     MaterialHelper.SetFloat(material, "_Glossiness", 0.65f);
                 });
         }
+    }
+
+    private static Sprite LoadIcon()
+    {
+        var assembly = Assembly.GetExecutingAssembly();
+        return ImageUtils.LoadImageFromResource(
+            assembly,
+            "BusinessEmployment.assets.safe_icon.png");
     }
 }
