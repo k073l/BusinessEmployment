@@ -17,7 +17,6 @@ public class SafeCreator
 {
     private const string SAFE_ID = "gold_safe";
     private const string SAFE_NAME = "Golden Safe";
-    private const float SAFE_PRICE = 1000f;
     internal const int SLOT_COUNT = 20;
 
     public static bool SafeCreated;
@@ -31,7 +30,7 @@ public class SafeCreator
     {
         var safeItem = BuildableItemCreator.CloneFrom("safe")
             .WithBasicInfo(SAFE_ID, SAFE_NAME, "An upgraded version of the safe. Can hold only cash.")
-            .WithPricing(SAFE_PRICE)
+            .WithPricing(BusinessEmployment.SafeCost.Value, 0.8f)
             .WithIcon(LoadIcon())
             .Build();
         // Wire up events

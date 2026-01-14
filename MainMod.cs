@@ -1,7 +1,8 @@
 using System.Collections;
 using BusinessEmployment.BetterSafe;
 using MelonLoader;
-using BusinessEmployment.Helpers;
+using MelonLoader.Preferences;
+using S1API.GameTime;
 using S1API.Lifecycle;
 using UnityEngine;
 #if MONO
@@ -31,19 +32,31 @@ namespace BusinessEmployment;
 public static class BuildInfo
 {
     public const string Name = "BusinessEmployment";
-    public const string Description = "does stuff i guess";
-    public const string Author = "me";
+    public const string Description = "Adds employees to Businesses";
+    public const string Author = "k073l";
     public const string Version = "1.0.0";
 }
 
 public class BusinessEmployment : MelonMod
 {
     private static MelonLogger.Instance _logger;
+    private static MelonPreferences_Category _category;
+    internal static MelonPreferences_Entry<float> EmpCut;
+    internal static MelonPreferences_Entry<float> SafeCost;
 
     public override void OnInitializeMelon()
     {
         _logger = LoggerInstance;
         _logger.Msg("BusinessEmployment initialized");
+
+        _category = MelonPreferences.CreateCategory("BusinessEmployment", "Business Employment Settings");
+        EmpCut = _category.CreateEntry("BusinessEmploymentEmployeeCut", 5f, "Employee Cut",
+            "Additional payment for Business employees for restocking the Golden Safe. (% of the cash total)",
+            validator: new ValueRange<float>(0, 100));
+        SafeCost = _category.CreateEntry("BusinessEmploymentGoldSafeCost", 5000f, "Golden Safe price",
+            "Price of the Golden Safe item in the Boutique",
+            validator: new ValueRange<float>(0f, 1E+09f));
+        
         GameLifecycle.OnPreLoad += CreateSafe;
     }
 
@@ -57,7 +70,21 @@ public class BusinessEmployment : MelonMod
                 break;
             case "Main":
                 MelonCoroutines.Start(AddDelayed());
+                TimeManager.OnSleepStart += SafeMethods.RefillSafe;
                 break;
+        }
+    }
+
+    public override void OnSceneWasUnloaded(int buildIndex, string sceneName)
+    {
+        if (sceneName != "Main") return;
+        try
+        {
+            TimeManager.OnSleepStart -= SafeMethods.RefillSafe;
+        }
+        catch (Exception ex)
+        {
+            // ignored
         }
     }
 
