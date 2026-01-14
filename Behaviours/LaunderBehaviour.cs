@@ -1,7 +1,9 @@
 ﻿using BusinessEmployment.BetterSafe;
+using BusinessEmployment.Persistence;
 using MelonLoader;
 using ScheduleOne.Employees;
 using ScheduleOne.ItemFramework;
+using ScheduleOne.Money;
 using ScheduleOne.ObjectScripts;
 using ScheduleOne.Property;
 using UnityEngine;
@@ -24,9 +26,9 @@ public class LaunderBehaviour
     private readonly Property property;
     private Business propertyAsBusiness;
     private ELaunderEmployeeState state = ELaunderEmployeeState.Idle;
-    private float cashInTransit; // TODO: Make this a custom saveable per property
     private PlaceableStorageEntity? currentSE;
     private LaunderingStation? station;
+    public LaunderBehaviourSaveData SaveData;
 
     private LaunderBehaviour(Packager employee)
     {
@@ -39,6 +41,18 @@ public class LaunderBehaviour
         }
         else 
             Melon<BusinessEmployment>.Logger.Error("Property cannot be cast to business!");
+
+        var propertyCode = property.PropertyCode;
+        var saved = LaunderBehaviourSave.Instance.SaveDatas.Where(s => s.PropertyCode == propertyCode);
+        if (saved.Any())
+        {
+            SaveData = saved.First();
+        }
+        else
+        {
+            SaveData = new LaunderBehaviourSaveData { PropertyCode = propertyCode, MoneyLeftToLaunder = 0 };
+            LaunderBehaviourSave.Instance.SaveDatas.Add(SaveData);
+        }
     }
 
     private static LaunderBehaviour GetOrCreate(Packager employee)
@@ -77,7 +91,7 @@ public class LaunderBehaviour
 
         ProcessCurrentState();
         if (Time.frameCount % 30 == 0)
-            MelonDebug.Msg($"Cash: {cashInTransit}, state: {state}");
+            MelonDebug.Msg($"Cash: {SaveData.MoneyLeftToLaunder}, state: {state}");
     }
 
     private bool IsValidState()
@@ -112,9 +126,23 @@ public class LaunderBehaviour
 
     private void HandleIdleState()
     {
+        if (SaveData.MoneyLeftToLaunder > 0 && 
+            propertyAsBusiness.currentLaunderTotal < propertyAsBusiness.LaunderCapacity)
+        {
+            if (EnsureLaunderingStationExists())
+            {
+                employee.SetWaitOutside(false);
+                MoveToLaunderingStation();
+                return;
+            }
+        }
+        
         var storages = GetAllStoragesWithCash().ToList();
         if (!storages.Any())
+        {
+            MelonDebug.Msg("No reachable storage with cash found");
             return;
+        }
 
         foreach (var storage in storages)
         {
@@ -128,9 +156,6 @@ public class LaunderBehaviour
                 return;
             }
         }
-        
-        // No reachable storage found
-        Melon<BusinessEmployment>.Logger.Warning("No reachable storage with cash found");
     }
 
     private Vector3? FindReachableAccessPoint(PlaceableStorageEntity storage)
@@ -182,7 +207,7 @@ public class LaunderBehaviour
                     WithdrawForLaunder(propertyAsBusiness.LaunderCapacity, cashInstance);
             }
 
-            if (cashInTransit >= propertyAsBusiness.LaunderCapacity)
+            if (SaveData.MoneyLeftToLaunder >= propertyAsBusiness.LaunderCapacity)
                 break;
         }
     }
@@ -226,16 +251,16 @@ public class LaunderBehaviour
         var availableCapacity = propertyAsBusiness.LaunderCapacity - propertyAsBusiness.currentLaunderTotal;
         if (availableCapacity > 0)
         {
-            var toDeposit = Math.Min(cashInTransit, availableCapacity);
+            var toDeposit = Math.Min(SaveData.MoneyLeftToLaunder, availableCapacity);
             propertyAsBusiness.StartLaunderingOperation(toDeposit);
-            cashInTransit -= toDeposit;
+            SaveData.MoneyLeftToLaunder -= toDeposit;
         }
         state = ELaunderEmployeeState.Idle;
     }
 
     private void WithdrawForLaunder(float launderTarget, CashInstance cashInstance)
     {
-        var shortfall = launderTarget - cashInTransit;
+        var shortfall = launderTarget - SaveData.MoneyLeftToLaunder;
 
         if (shortfall <= 0 || cashInstance.Balance <= 0)
             return;
@@ -244,7 +269,7 @@ public class LaunderBehaviour
         
         employee.SetAnimationTrigger_Networked(null, "GrabItem");
         cashInstance.ChangeBalance(-toTake);
-        cashInTransit += toTake;
+        SaveData.MoneyLeftToLaunder += toTake;
     }
 
     public IEnumerable<PlaceableStorageEntity?> GetAllStoragesWithCash(bool onlySafes = false)
