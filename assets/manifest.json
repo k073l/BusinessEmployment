@@ -1,10 +1,11 @@
 {
     "name": "BusinessEmployment",
     "version_number": "1.0.0",
-    "website_url": "",
-    "description": "Adds employees to Businesses",
+    "website_url": "https://github.com/k073l/BusinessEmployment",
+    "description": "Adds employees to Businesses. Automates laundering.",
     "dependencies": [
         "LavaGang-MelonLoader-0.7.0",
-        "the_croods-SwapperPlugin-1.2.2"
+        "the_croods-SwapperPlugin-1.2.2",
+        "ifBars-S1API_Forked-2.9.3"
     ]
 }

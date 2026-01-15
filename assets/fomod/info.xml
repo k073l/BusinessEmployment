@@ -3,6 +3,6 @@
     <Name>BusinessEmployment</Name>
     <Author>k073l</Author>
     <Version>1.0.0</Version>
-    <Website />
-    <Description>Adds employees to Businesses</Description>
+    <Website>https://github.com/k073l/BusinessEmployment</Website>
+    <Description>Adds employees to Businesses. Automates laundering.</Description>
 </fomod>
