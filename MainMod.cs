@@ -5,11 +5,6 @@ using MelonLoader.Preferences;
 using S1API.GameTime;
 using S1API.Lifecycle;
 using UnityEngine;
-#if MONO
-using FishNet;
-#else
-using Il2CppFishNet;
-#endif
 
 [assembly: MelonInfo(
     typeof(BusinessEmployment.BusinessEmployment),
@@ -17,7 +12,7 @@ using Il2CppFishNet;
     BusinessEmployment.BuildInfo.Version,
     BusinessEmployment.BuildInfo.Author
 )]
-[assembly: MelonColor(1, 255, 0, 0)]
+[assembly: MelonColor(1, 255, 195, 86)]
 [assembly: MelonGame("TVGS", "Schedule I")]
 
 // Specify platform domain based on build target (remove this if your mod supports both via S1API)
@@ -32,7 +27,7 @@ namespace BusinessEmployment;
 public static class BuildInfo
 {
     public const string Name = "BusinessEmployment";
-    public const string Description = "Adds employees to Businesses";
+    public const string Description = "Adds employees to Businesses. Automates laundering.";
     public const string Author = "k073l";
     public const string Version = "1.0.0";
 }

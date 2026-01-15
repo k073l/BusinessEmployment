@@ -1,11 +1,16 @@
 ﻿using BusinessEmployment.Helpers;
 using MelonLoader;
-using ScheduleOne;
+#if MONO
 using ScheduleOne.ItemFramework;
 using ScheduleOne.Money;
 using ScheduleOne.ObjectScripts;
 using ScheduleOne.Property;
-using UnityEngine;
+#else
+using Il2CppScheduleOne.ItemFramework;
+using Il2CppScheduleOne.Money;
+using Il2CppScheduleOne.ObjectScripts;
+using Il2CppScheduleOne.Property;
+#endif
 
 namespace BusinessEmployment.BetterSafe;
 
@@ -19,7 +24,10 @@ public class SafeMethods
         var betterSafes = Business.OwnedBusinesses
             .AsEnumerable()
             .Where(b => b.Employees.Count > 0)
-            .SelectMany(p => p.BuildableItems)
+            .Select(p => p.BuildableItems)
+            .Where(items => items != null)
+            .Select(items => items.AsEnumerable())
+            .Aggregate((a, b) => a.Concat(b))
             .Select(bi => Utils.Is<PlaceableStorageEntity>(bi, out var r) ? r : null)
             .Where(r => r != null)
             .Select(pse => pse.StorageEntity)

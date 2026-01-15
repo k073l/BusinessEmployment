@@ -1,8 +1,12 @@
 ﻿using HarmonyLib;
 using MelonLoader;
-using ScheduleOne.Property;
 using UnityEngine;
 using Object = UnityEngine.Object;
+#if MONO
+using ScheduleOne.Property;
+#else
+using Il2CppScheduleOne.Property;
+#endif
 
 namespace BusinessEmployment.Patches;
 

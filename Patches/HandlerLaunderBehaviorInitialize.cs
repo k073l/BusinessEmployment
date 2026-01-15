@@ -1,7 +1,13 @@
 ﻿using BusinessEmployment.Behaviours;
+using BusinessEmployment.Helpers;
 using HarmonyLib;
+#if MONO
 using ScheduleOne.Employees;
 using ScheduleOne.Property;
+#else
+using Il2CppScheduleOne.Employees;
+using Il2CppScheduleOne.Property;
+#endif
 
 namespace BusinessEmployment.Patches;
 
@@ -14,7 +20,7 @@ public class HandlerLaunderBehaviorInitialize
     {
         if (__instance == null) return;
         if (__instance.AssignedProperty == null) return;
-        if (__instance.AssignedProperty is not Business) return;
+        if (!Utils.Is<Business>(__instance.AssignedProperty, out _)) return;
         if (!__instance.CanWork()) return;
         if (__instance.Fired) return;
         if (__instance.PackagingBehaviour.Active || __instance.MoveItemBehaviour.Active) return;

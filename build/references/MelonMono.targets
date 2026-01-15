@@ -373,6 +373,9 @@
         <Reference Include="Assembly-CSharp-firstpass">
             <HintPath>$(S1Dir)\Schedule I_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
         </Reference>
+        <Reference Include="S1API">
+            <HintPath>$(S1Dir)\Mods\S1API.Mono.MelonLoader.dll</HintPath>
+        </Reference>
     </ItemGroup>
 
 </Project>

@@ -9,7 +9,11 @@ using S1API.Shops;
 using S1API.Storage;
 using S1API.Utils;
 using UnityEngine;
+#if MONO
 using S1Storage = ScheduleOne.Storage;
+#else
+using S1Storage = Il2CppScheduleOne.Storage;
+#endif
 
 namespace BusinessEmployment.BetterSafe;
 
@@ -56,6 +60,7 @@ public class SafeCreator
         if (shop == null)
         {
             Melon<BusinessEmployment>.Logger.Error("Shop not found");
+            return;
         }
 
         shop.AddItem(safe);
@@ -119,6 +124,6 @@ public class SafeCreator
         var assembly = Assembly.GetExecutingAssembly();
         return ImageUtils.LoadImageFromResource(
             assembly,
-            "BusinessEmployment.assets.safe_icon.png");
+            "BusinessEmployment.assets.safe_icon.png")!;
     }
 }

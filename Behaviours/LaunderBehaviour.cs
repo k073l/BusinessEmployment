@@ -1,13 +1,21 @@
 ﻿using BusinessEmployment.BetterSafe;
+using BusinessEmployment.Helpers;
 using BusinessEmployment.Persistence;
 using MelonLoader;
-using ScheduleOne.Employees;
-using ScheduleOne.ItemFramework;
-using ScheduleOne.Money;
-using ScheduleOne.ObjectScripts;
-using ScheduleOne.Property;
 using UnityEngine;
 using Utils = BusinessEmployment.Helpers.Utils;
+#if MONO
+using ScheduleOne.Employees;
+using ScheduleOne.ItemFramework;
+using ScheduleOne.ObjectScripts;
+using ScheduleOne.Property;
+#else
+using Il2CppScheduleOne.Employees;
+using Il2CppScheduleOne.ItemFramework;
+using Il2CppScheduleOne.ObjectScripts;
+using Il2CppScheduleOne.Property;
+#endif
+
 
 namespace BusinessEmployment.Behaviours;
 
@@ -50,7 +58,7 @@ public class LaunderBehaviour
         }
     }
 
-    private static LaunderBehaviour GetOrCreate(Packager employee)
+    private static LaunderBehaviour? GetOrCreate(Packager employee)
     {
         if (employee == null)
             return null;
@@ -102,6 +110,8 @@ public class LaunderBehaviour
     private void SetIdleAndWaitOutside()
     {
         state = ELaunderEmployeeState.Idle;
+        employee.SubmitNoWorkReason("There's nothing for me to do right now.", "I need to have cash to launder or free laundering capacity.");
+        employee.SetIdle(true);
         employee?.SetWaitOutside(true);
     }
 
@@ -161,7 +171,10 @@ public class LaunderBehaviour
     private Vector3? FindReachableAccessPoint(PlaceableStorageEntity storage)
     {
         if (storage?.AccessPoints == null)
+        {
+            MelonDebug.Error("Storage accesspoints is null");
             return null;
+        }
 
         foreach (var accessPoint in storage.AccessPoints)
         {
@@ -169,6 +182,7 @@ public class LaunderBehaviour
                 return accessPoint.position;
         }
 
+        MelonDebug.Error("Wasn't able to find a good position to move to");
         return null;
     }
 
@@ -197,7 +211,10 @@ public class LaunderBehaviour
     private void CollectCashFromStorage()
     {
         if (currentSE?.StorageEntity?.ItemSlots == null)
+        {
+            MelonDebug.Error("Storage itemslots is null");
             return;
+        }
 
         var itemSlots = currentSE.StorageEntity.ItemSlots;
         for (var i = 0; i < itemSlots.Count; i++)
@@ -221,7 +238,7 @@ public class LaunderBehaviour
         if (station != null)
             return true;
 
-        station = property.BuildableItems
+        station = property.BuildableItems.AsEnumerable()
             .Select(bi => Utils.Is<LaunderingStation>(bi, out var r) ? r : null)
             .FirstOrDefault(r => r != null);
 
@@ -279,10 +296,11 @@ public class LaunderBehaviour
     public IEnumerable<PlaceableStorageEntity?> GetAllStoragesWithCash()
     {
         var storages = property.BuildableItems
+            .AsEnumerable()
             .Select(bi => Utils.Is<PlaceableStorageEntity>(bi, out var r) ? r : null)
             .Where(r => r != null)
             .Where(pse => pse.StorageEntity != employee.GetHome().Storage)
-            .Where(pse => pse.OutputSlots.Any(os => os.ItemInstance is CashInstance))
+            .Where(pse => pse.OutputSlots.AsEnumerable().Any(os => Utils.Is<CashInstance>(os.ItemInstance, out _)))
             .OrderBy(pse =>
                 pse?.StorageEntity != null &&
                 pse.StorageEntity.ItemSlots?.Count == SafeCreator.SLOT_COUNT &&

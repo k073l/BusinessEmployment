@@ -3,11 +3,18 @@ using System.Reflection;
 using BusinessEmployment.Helpers;
 using MelonLoader;
 using S1API.Storages;
+using UnityEngine;
+#if MONO
 using ScheduleOne.ObjectScripts;
 using ScheduleOne.Property;
-using UnityEngine;
 using S1Storage = ScheduleOne.Storage;
 using S1ItemFramework = ScheduleOne.ItemFramework;
+#else
+using Il2CppScheduleOne.ObjectScripts;
+using Il2CppScheduleOne.Property;
+using S1Storage = Il2CppScheduleOne.Storage;
+using S1ItemFramework = Il2CppScheduleOne.ItemFramework;
+#endif
 
 namespace BusinessEmployment.BetterSafe;
 
@@ -27,7 +34,10 @@ internal class FilterHelper
             // I hope 20 slots + "Safe" in children is a good enough heuristic
             var betterSafes = Property.Properties
                 .AsEnumerable()
-                .SelectMany(p => p.BuildableItems)
+                .Select(p => p.BuildableItems)
+                .Where(items => items != null)
+                .Select(items => items.AsEnumerable())
+                .Aggregate((a, b) => a.Concat(b))
                 .Select(bi => Utils.Is<PlaceableStorageEntity>(bi, out var r)
                     ? r
                     : null)

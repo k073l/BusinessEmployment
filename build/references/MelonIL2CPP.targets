@@ -443,5 +443,8 @@
         <Reference Include="Assembly-CSharp">
             <HintPath>$(S1Dir)\MelonLoader\Il2CppAssemblies\Assembly-CSharp.dll</HintPath>
         </Reference>
+        <Reference Include="S1API">
+            <HintPath>$(S1Dir)\Mods\S1API.Il2Cpp.MelonLoader.dll</HintPath>
+        </Reference>
     </ItemGroup>
 </Project>
