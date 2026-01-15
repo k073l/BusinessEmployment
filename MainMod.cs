@@ -29,7 +29,7 @@ public static class BuildInfo
     public const string Name = "BusinessEmployment";
     public const string Description = "Adds employees to Businesses. Automates laundering.";
     public const string Author = "k073l";
-    public const string Version = "1.0.0";
+    public const string Version = "1.0.1";
 }
 
 public class BusinessEmployment : MelonMod
@@ -38,6 +38,7 @@ public class BusinessEmployment : MelonMod
     private static MelonPreferences_Category _category;
     internal static MelonPreferences_Entry<float> EmpCut;
     internal static MelonPreferences_Entry<float> SafeCost;
+    internal static MelonPreferences_Entry<bool> EnableSafeAutoRestock;
 
     public override void OnInitializeMelon()
     {
@@ -51,7 +52,10 @@ public class BusinessEmployment : MelonMod
         SafeCost = _category.CreateEntry("BusinessEmploymentGoldSafeCost", 5000f, "Golden Safe price",
             "Price of the Golden Safe item in the Boutique",
             validator: new ValueRange<float>(0f, 1E+09f));
-        
+        EnableSafeAutoRestock = _category.CreateEntry("BusinessEmploymentEnableSafeAutoRestock", true,
+            "Enable Golden Safe Auto-Restock",
+            "If enabled, businesses with employees will automatically restock their Golden Safes when you sleep.");
+
         GameLifecycle.OnPreLoad += CreateSafe;
     }
 

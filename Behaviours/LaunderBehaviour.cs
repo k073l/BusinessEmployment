@@ -9,6 +9,7 @@ using ScheduleOne.Employees;
 using ScheduleOne.ItemFramework;
 using ScheduleOne.ObjectScripts;
 using ScheduleOne.Property;
+
 #else
 using Il2CppScheduleOne.Employees;
 using Il2CppScheduleOne.ItemFramework;
@@ -110,7 +111,8 @@ public class LaunderBehaviour
     private void SetIdleAndWaitOutside()
     {
         state = ELaunderEmployeeState.Idle;
-        employee.SubmitNoWorkReason("There's nothing for me to do right now.", "I need to have cash to launder or free laundering capacity.");
+        employee.SubmitNoWorkReason("There's nothing for me to do right now.",
+            "I need to have cash to launder or free laundering capacity.");
         employee.SetIdle(true);
         employee?.SetWaitOutside(true);
     }
@@ -301,11 +303,7 @@ public class LaunderBehaviour
             .Where(r => r != null)
             .Where(pse => pse.StorageEntity != employee.GetHome().Storage)
             .Where(pse => pse.OutputSlots.AsEnumerable().Any(os => Utils.Is<CashInstance>(os.ItemInstance, out _)))
-            .OrderBy(pse =>
-                pse?.StorageEntity != null &&
-                pse.StorageEntity.ItemSlots?.Count == SafeCreator.SLOT_COUNT &&
-                pse.StorageEntity.transform.Find("Safe") != null
-            ); // Safes last (false < true)
+            .OrderBy(pse => pse.SaveFolderName.Contains(SafeCreator.SAFE_ID)); // Safes last (false < true)
 
         return storages;
     }

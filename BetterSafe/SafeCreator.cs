@@ -19,7 +19,7 @@ namespace BusinessEmployment.BetterSafe;
 
 public class SafeCreator
 {
-    private const string SAFE_ID = "gold_safe";
+    internal const string SAFE_ID = "gold_safe";
     private const string SAFE_NAME = "Golden Safe";
     internal const int SLOT_COUNT = 20;
 
@@ -76,7 +76,6 @@ public class SafeCreator
             return;
         }
 
-        // Wasteful to 
         MelonCoroutines.Start(FilterHelper.WaitSearchAdd(10f));
     }
 

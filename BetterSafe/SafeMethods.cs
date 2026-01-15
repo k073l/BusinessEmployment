@@ -21,6 +21,7 @@ public class SafeMethods
     /// </summary>
     public static void RefillSafe()
     {
+        if (!BusinessEmployment.EnableSafeAutoRestock.Value) return;
         var betterSafes = Business.OwnedBusinesses
             .AsEnumerable()
             .Where(b => b.Employees.Count > 0)
@@ -30,8 +31,8 @@ public class SafeMethods
             .Aggregate((a, b) => a.Concat(b))
             .Select(bi => Utils.Is<PlaceableStorageEntity>(bi, out var r) ? r : null)
             .Where(r => r != null)
-            .Select(pse => pse.StorageEntity)
-            .Where(s => s.ItemSlots.Count == SafeCreator.SLOT_COUNT && s.transform.Find("Safe") != null);
+            .Where(pse => pse.SaveFolderName.Contains(SafeCreator.SAFE_ID))
+            .Select(pse => pse.StorageEntity);
 
         var percentageCut = BusinessEmployment.EmpCut.Value;
         var playerCash = MoneyManager.Instance.cashBalance;

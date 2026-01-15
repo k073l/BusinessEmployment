@@ -9,6 +9,7 @@ using ScheduleOne.ObjectScripts;
 using ScheduleOne.Property;
 using S1Storage = ScheduleOne.Storage;
 using S1ItemFramework = ScheduleOne.ItemFramework;
+
 #else
 using Il2CppScheduleOne.ObjectScripts;
 using Il2CppScheduleOne.Property;
@@ -21,13 +22,13 @@ namespace BusinessEmployment.BetterSafe;
 internal class FilterHelper
 {
     private static ItemFilter_Cash filter_Cash;
-    
+
     private static MelonLogger.Instance _logger = Melon<BusinessEmployment>.Logger;
-    
+
     internal static IEnumerator WaitSearchAdd(float timeout)
     {
         filter_Cash ??= new ItemFilter_Cash();
-        
+
         var startTime = Time.time;
         while (Time.time - startTime <= timeout)
         {
@@ -42,8 +43,8 @@ internal class FilterHelper
                     ? r
                     : null)
                 .Where(r => r != null)
-                .Select(pse => pse.StorageEntity) // All storage entities placed in properties
-                .Where(s => s.ItemSlots.Count == SafeCreator.SLOT_COUNT && s.transform.Find("Safe") != null);
+                .Where(pse => pse.SaveFolderName.Contains(SafeCreator.SAFE_ID))
+                .Select(pse => pse.StorageEntity);
             foreach (var betterSafe in betterSafes)
             {
                 foreach (var slot in betterSafe.ItemSlots)
