@@ -55,10 +55,10 @@ internal class FixerDialogue
             existingChoices.Add(choice);
         }
 
-        Melon<BusinessEmployment>.Logger.Msg("Sanity Check");
+        MelonDebug.Msg("Sanity Check");
         foreach (var choice in existingChoices)
         {
-            Melon<BusinessEmployment>.Logger.Msg($"{choice.ChoiceText}: {choice.ChoiceLabel}");
+            MelonDebug.Msg($"{choice.ChoiceText}: {choice.ChoiceLabel}");
         }
 
         return false;
