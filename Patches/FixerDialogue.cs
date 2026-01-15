@@ -28,8 +28,6 @@ internal class FixerDialogue
     {
         if (__instance == null) return true;
         if (dialogueLabel != "SELECT_LOCATION") return true;
-        // we can limit the employee type to handler, but should we?
-        // if (__instance.selectedEmployeeType != EEmployeeType.Handler) return true;
 
         var newChoices = new System.Collections.Generic.List<DialogueChoiceData>();
 
@@ -252,36 +250,43 @@ public static class DialoguePagingPatches
             if (!PagingActive) return true;
             if (_handler == null || _fullChoices == null) return true;
 
-            if (IsMoreIndex(choiceIndex))
-            {
-                reason = string.Empty;
-                __result = true;
-                return false;
-            }
-
+            // check if this is a page-relative index (0 to realOnPage)
             var total = _fullChoices.Count;
             var pageStart = _pageIndex * ChoicesPerPage;
             var remaining = Math.Max(0, total - pageStart);
             var realOnPage = Math.Min(ChoicesPerPage, remaining);
 
-            if (choiceIndex < 0 || choiceIndex >= realOnPage)
+            // if choiceIndex is within page bounds, it's a page-relative index
+            if (choiceIndex <= realOnPage)
             {
-                reason = string.Empty;
-                __result = false;
-                return false;
+                if (IsMoreIndex(choiceIndex))
+                {
+                    reason = string.Empty;
+                    __result = true;
+                    return false;
+                }
+
+                if (choiceIndex < 0 || choiceIndex >= realOnPage)
+                {
+                    reason = string.Empty;
+                    __result = false;
+                    return false;
+                }
+
+                // map to real
+                choiceIndex = pageStart + choiceIndex;
             }
 
-            var realIndex = pageStart + choiceIndex;
-
+            // validate using the real index against CurrentChoices
             var current = _handler.CurrentChoices;
-            if (current == null || realIndex < 0 || realIndex >= current.Count)
+            if (current == null || choiceIndex < 0 || choiceIndex >= current.Count)
             {
                 reason = string.Empty;
                 __result = false;
                 return false;
             }
 
-            var data = current[realIndex];
+            var data = current[choiceIndex];
             var label = data?.ChoiceLabel ?? string.Empty;
 
             if (string.IsNullOrWhiteSpace(label))

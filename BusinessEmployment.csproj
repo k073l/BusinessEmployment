@@ -8,7 +8,7 @@
         <!-- <DefineConstants>$(DefineConstants);DEBUG</DefineConstants> -->
 
         <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>disable</Nullable>
+        <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
         <LangVersion>latest</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
@@ -21,8 +21,6 @@
     <!-- Paths to other mods that script should add (no guard for mono/il2cpp incompat) -->
     <ItemGroup><!--<ModList Include="$(CommonDir)\Mods\DisclaimerSkipMono.dll" />-->
         <!--<ModList Include="$(CommonDir)\Mods\DisclaimerSkipIL2CPP.dll" />-->
-    
-      <PackageReference Include="S1API.Forked" Version="2.9.2" />
       <EmbeddedResource Include="assets\safe_icon.png"/>
     </ItemGroup>
 
