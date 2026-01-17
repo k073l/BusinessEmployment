@@ -21,7 +21,7 @@ Adds the ability to assign employees to your businesses.
       - 20 slots of capacity
       - Can **only hold cash**
    - **Handler interactions in Businesses:**
-      - When you sleep, your handler will **automatically refill the safe** with cash from your pocket, fully automating your laundering (as long as the locker has cash to pay them).
+      - When you sleep, your handler will **automatically refill the safe** with cash from your pocket, fully automating your laundering (as long as the locker has cash to pay them) *(configurable)*.
       - They will take a small payment for this service *(configurable)*.
 
 ## Screenshots

@@ -32,7 +32,6 @@ internal class FilterHelper
         var startTime = Time.time;
         while (Time.time - startTime <= timeout)
         {
-            // I hope 20 slots + "Safe" in children is a good enough heuristic
             var betterSafes = Property.Properties
                 .AsEnumerable()
                 .Select(p => p.BuildableItems)
@@ -43,7 +42,8 @@ internal class FilterHelper
                     ? r
                     : null)
                 .Where(r => r != null)
-                .Where(pse => pse.SaveFolderName.Contains(SafeCreator.SAFE_ID))
+                .Where(pse => pse.SaveFolderName != null && pse.SaveFolderName.Contains(SafeCreator.SAFE_ID))
+                .Where(pse => pse.StorageEntity != null)
                 .Select(pse => pse.StorageEntity);
             foreach (var betterSafe in betterSafes)
             {

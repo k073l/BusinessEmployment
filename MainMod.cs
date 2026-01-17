@@ -29,7 +29,7 @@ public static class BuildInfo
     public const string Name = "BusinessEmployment";
     public const string Description = "Adds employees to Businesses. Automates laundering.";
     public const string Author = "k073l";
-    public const string Version = "1.0.1";
+    public const string Version = "1.0.2";
 }
 
 public class BusinessEmployment : MelonMod

@@ -295,17 +295,31 @@ public class LaunderBehaviour
         SaveData.MoneyLeftToLaunder += toTake;
     }
 
-    public IEnumerable<PlaceableStorageEntity?> GetAllStoragesWithCash()
+    public IEnumerable<PlaceableStorageEntity> GetAllStoragesWithCash()
     {
-        var storages = property.BuildableItems
+        var home = employee?.GetHome();
+        var homeStorage = home?.Storage;
+
+        if (property?.BuildableItems == null)
+            return [];
+
+        return property.BuildableItems
             .AsEnumerable()
             .Select(bi => Utils.Is<PlaceableStorageEntity>(bi, out var r) ? r : null)
-            .Where(r => r != null)
-            .Where(pse => pse.StorageEntity != employee.GetHome().Storage)
-            .Where(pse => pse.OutputSlots.AsEnumerable().Any(os => Utils.Is<CashInstance>(os.ItemInstance, out _)))
-            .OrderBy(pse => pse.SaveFolderName.Contains(SafeCreator.SAFE_ID)); // Safes last (false < true)
-
-        return storages;
+            .Where(pse => pse != null)
+            .Where(pse => pse.StorageEntity != null)
+            .Where(pse => homeStorage == null || pse.StorageEntity != homeStorage)
+            .Where(pse =>
+                pse.OutputSlots != null &&
+                pse.OutputSlots.AsEnumerable().Any(os =>
+                    os is { ItemInstance: not null } &&
+                    Utils.Is<CashInstance>(os.ItemInstance, out _)
+                )
+            )
+            .OrderBy(pse =>
+                pse.SaveFolderName != null &&
+                pse.SaveFolderName.Contains(SafeCreator.SAFE_ID)
+            )!; // Safes last (false < true)
     }
 
     public static void Remove(Packager employee)

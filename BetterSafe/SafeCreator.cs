@@ -11,6 +11,7 @@ using S1API.Utils;
 using UnityEngine;
 #if MONO
 using S1Storage = ScheduleOne.Storage;
+
 #else
 using S1Storage = Il2CppScheduleOne.Storage;
 #endif
@@ -25,17 +26,20 @@ public class SafeCreator
 
     public static bool SafeCreated;
     public static bool SafeAdded;
-    
+
     private static readonly Color GoldMetalColor = new Color(
         1.000f, 0.766f, 0.336f, 1f
     );
 
+    internal static Sprite SafeIcon;
+
     public static void CreateSafe()
     {
+        SafeIcon = LoadIcon();
         var safeItem = BuildableItemCreator.CloneFrom("safe")
             .WithBasicInfo(SAFE_ID, SAFE_NAME, "An upgraded version of the safe. Can hold only cash.")
             .WithPricing(BusinessEmployment.SafeCost.Value, 0.8f)
-            .WithIcon(LoadIcon())
+            .WithIcon(SafeIcon)
             .Build();
         // Wire up events
         BuildEvents.OnBuildableItemInitialized += ItemBuilt;

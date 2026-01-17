@@ -5,11 +5,14 @@ using ScheduleOne.ItemFramework;
 using ScheduleOne.Money;
 using ScheduleOne.ObjectScripts;
 using ScheduleOne.Property;
+using ScheduleOne.UI;
+
 #else
 using Il2CppScheduleOne.ItemFramework;
 using Il2CppScheduleOne.Money;
 using Il2CppScheduleOne.ObjectScripts;
 using Il2CppScheduleOne.Property;
+using Il2CppScheduleOne.UI;
 #endif
 
 namespace BusinessEmployment.BetterSafe;
@@ -31,7 +34,8 @@ public class SafeMethods
             .Aggregate((a, b) => a.Concat(b))
             .Select(bi => Utils.Is<PlaceableStorageEntity>(bi, out var r) ? r : null)
             .Where(r => r != null)
-            .Where(pse => pse.SaveFolderName.Contains(SafeCreator.SAFE_ID))
+            .Where(pse => pse.SaveFolderName != null && pse.SaveFolderName.Contains(SafeCreator.SAFE_ID))
+            .Where(pse => pse.StorageEntity != null)
             .Select(pse => pse.StorageEntity);
 
         var percentageCut = BusinessEmployment.EmpCut.Value;
@@ -95,5 +99,8 @@ public class SafeMethods
         MoneyManager.Instance.ChangeCashBalance(-totalCost);
         Melon<BusinessEmployment>.Logger.Msg(
             $"Refilled safes! Inserted: {totalInserted}, Employee cut: {totalCut}, Total cost: {totalCost}");
+        if (totalCost > 0)
+            NotificationsManager.Instance.SendNotification("Safes Refilled!",
+                $"Total cost: ${totalCost:N2}", SafeCreator.SafeIcon, 18f);
     }
 }
