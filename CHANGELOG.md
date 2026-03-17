@@ -1,5 +1,7 @@
 # Changelog
 
+## 1.0.3
+- Lower max Golden Safe price in the validator to 100k
 ## 1.0.2
 - Add more guarding against potential nullrefs when searching for safes and other containers with cash.
 - Add a notification when safes are refilled.

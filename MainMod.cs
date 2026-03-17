@@ -29,7 +29,7 @@ public static class BuildInfo
     public const string Name = "BusinessEmployment";
     public const string Description = "Adds employees to Businesses. Automates laundering.";
     public const string Author = "k073l";
-    public const string Version = "1.0.2";
+    public const string Version = "1.0.3";
 }
 
 public class BusinessEmployment : MelonMod
@@ -51,7 +51,7 @@ public class BusinessEmployment : MelonMod
             validator: new ValueRange<float>(0, 100));
         SafeCost = _category.CreateEntry("BusinessEmploymentGoldSafeCost", 5000f, "Golden Safe price",
             "Price of the Golden Safe item in the Boutique",
-            validator: new ValueRange<float>(0f, 1E+09f));
+            validator: new ValueRange<float>(0f, 1E+05f));
         EnableSafeAutoRestock = _category.CreateEntry("BusinessEmploymentEnableSafeAutoRestock", true,
             "Enable Golden Safe Auto-Restock",
             "If enabled, businesses with employees will automatically restock their Golden Safes when you sleep.");

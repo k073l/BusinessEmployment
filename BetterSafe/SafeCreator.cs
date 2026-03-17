@@ -37,7 +37,7 @@ public class SafeCreator
     {
         SafeIcon = LoadIcon();
         var safeItem = BuildableItemCreator.CloneFrom("safe")
-            .WithBasicInfo(SAFE_ID, SAFE_NAME, "An upgraded version of the safe. Can hold only cash.")
+            .WithBasicInfo(SAFE_ID, SAFE_NAME, "An upgraded version of the safe. Can only hold cash.")
             .WithPricing(BusinessEmployment.SafeCost.Value, 0.8f)
             .WithIcon(SafeIcon)
             .Build();
