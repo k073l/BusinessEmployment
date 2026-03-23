@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.6
+- Fix: Minor bug where refilling safes could throw an error if no valid safes were found
+## 1.0.5
+- Hotfix for <0.4.4 - compile against lower version assemblies
+## 1.0.4
+- Hotfix: Compile against S1API 2.9.3 - accidentally pinned the version by compiling against the latest
 ## 1.0.3
 - Lower max Golden Safe price in the validator to 100k
 ## 1.0.2

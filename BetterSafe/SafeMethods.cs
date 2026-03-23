@@ -31,7 +31,7 @@ public class SafeMethods
             .Select(p => p.BuildableItems)
             .Where(items => items != null)
             .Select(items => items.AsEnumerable())
-            .Aggregate((a, b) => a.Concat(b))
+            .SelectMany(items => items)
             .Select(bi => Utils.Is<PlaceableStorageEntity>(bi, out var r) ? r : null)
             .Where(r => r != null)
             .Where(pse => pse.SaveFolderName != null && pse.SaveFolderName.Contains(SafeCreator.SAFE_ID))
