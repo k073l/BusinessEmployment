@@ -39,6 +39,8 @@ public class BusinessEmployment : MelonMod
     internal static MelonPreferences_Entry<float> EmpCut;
     internal static MelonPreferences_Entry<float> SafeCost;
     internal static MelonPreferences_Entry<bool> EnableSafeAutoRestock;
+    internal static MelonPreferences_Category CapacityCategory;
+    internal static HashSet<MelonPreferences_Entry> BusinessCapacities = [];
 
     public override void OnInitializeMelon()
     {
@@ -55,6 +57,7 @@ public class BusinessEmployment : MelonMod
         EnableSafeAutoRestock = _category.CreateEntry("BusinessEmploymentEnableSafeAutoRestock", true,
             "Enable Golden Safe Auto-Restock",
             "If enabled, businesses with employees will automatically restock their Golden Safes when you sleep.");
+        CapacityCategory = MelonPreferences.CreateCategory("BusinessEmployment_BusinessCapacity", "Business Laundering Limit Settings");
 
         GameLifecycle.OnPreLoad += CreateSafe;
     }

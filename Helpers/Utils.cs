@@ -190,6 +190,38 @@ public static class Utils
         return results;
     }
 
+    public static Transform FindByPath(GameObject root, string path)
+    {
+        var parts = path.Split('/');
+
+        var allTransforms = GetAllComponentsInChildrenRecursive<Transform>(root);
+
+        foreach (var t in allTransforms)
+        {
+            if (t.name != parts[^1]) continue;
+
+            var current = t;
+            var match = true;
+
+            // walk backwards through the path
+            for (int i = parts.Length - 1; i >= 0; i--)
+            {
+                if (current == null || current.name != parts[i])
+                {
+                    match = false;
+                    break;
+                }
+
+                current = current.parent;
+            }
+
+            if (match)
+                return t;
+        }
+
+        return null;
+    }
+
     /// <summary>
     /// Checks if the given object is of type <typeparamref name="T"/> and casts it to that type.
     /// </summary>
