@@ -3,6 +3,7 @@
 ## 1.0.7
 - Fix: Dynamically adjust max choices shown in hiring dialogue based on the UI scale to prevent the dialogue from becoming unusable at higher scales
 - Feat: Add configuration options for laundering capacities per Business
+- Feat: Add notifications when handlers launder cash, including the deposited amount and the current limit.
 ## 1.0.6
 - Fix: Minor bug where refilling safes could throw an error if no valid safes were found
 ## 1.0.5

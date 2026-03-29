@@ -6,10 +6,12 @@ using MelonLoader.Preferences;
 using UnityEngine;
 using Object = UnityEngine.Object;
 #if MONO
+using TMPro;
 using ScheduleOne.Property;
 using ScheduleOne.Money;
 
 #else
+using Il2CppTMPro;
 using Il2CppScheduleOne.Property;
 using Il2CppScheduleOne.Money;
 #endif
@@ -78,7 +80,7 @@ internal class BusinessPostAwake
             var contentsGo = container.gameObject;
             var max = Utils.FindByPath(contentsGo, "LaunderingInterface/CurrentOperations/Total/Max");
             if (max == null) return;
-            var maxText = max.GetComponent<TMPro.TextMeshProUGUI>();
+            var maxText = max.GetComponent<TextMeshProUGUI>();
             if (maxText != null) maxText.text = MoneyManager.FormatAmount(amount);
         }
     }

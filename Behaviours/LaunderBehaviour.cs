@@ -9,12 +9,16 @@ using ScheduleOne.Employees;
 using ScheduleOne.ItemFramework;
 using ScheduleOne.ObjectScripts;
 using ScheduleOne.Property;
+using ScheduleOne.Money;
+using ScheduleOne.UI;
 
 #else
 using Il2CppScheduleOne.Employees;
 using Il2CppScheduleOne.ItemFramework;
 using Il2CppScheduleOne.ObjectScripts;
 using Il2CppScheduleOne.Property;
+using Il2CppScheduleOne.Money;
+using Il2CppScheduleOne.UI;
 #endif
 
 
@@ -276,6 +280,12 @@ public class LaunderBehaviour
             var toDeposit = Math.Min(SaveData.MoneyLeftToLaunder, availableCapacity);
             propertyAsBusiness.StartLaunderingOperation(toDeposit);
             SaveData.MoneyLeftToLaunder -= toDeposit;
+            NotificationsManager.Instance.SendNotification($"{property.PropertyName} Worker",
+                $"Deposited {MoneyManager.FormatAmount(toDeposit)}.",
+                SafeCreator.SafeIcon, 8f);
+            NotificationsManager.Instance.SendNotification($"{property.PropertyName} Worker",
+                $"Total: {MoneyManager.FormatAmount(propertyAsBusiness.currentLaunderTotal)}/{MoneyManager.FormatAmount(propertyAsBusiness.LaunderCapacity)}.",
+                SafeCreator.SafeIcon, 8f);
         }
 
         state = ELaunderEmployeeState.Idle;
