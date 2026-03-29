@@ -1,11 +1,14 @@
 ﻿using System.Collections;
 using HarmonyLib;
 using MelonLoader;
+using UnityEngine;
 #if MONO
+using ScheduleOne.DevUtilities;
 using ScheduleOne.Dialogue;
 using ScheduleOne.Property;
 using ScheduleOne.UI;
 #else
+using Il2CppScheduleOne.DevUtilities;
 using Il2CppScheduleOne.Dialogue;
 using Il2CppScheduleOne.Property;
 using Il2CppScheduleOne.UI;
@@ -72,7 +75,21 @@ internal class FixerDialogue
 [HarmonyPatch(typeof(DialogueCanvas))]
 public static class DialoguePagingPatches
 {
-    private const int ChoicesPerPage = 7;
+    private static int ChoicesPerPage
+    {
+        get
+        {
+            var scale = Settings.Instance?.DisplaySettings.UIScale ?? 1f;
+
+            return scale switch
+            {
+                >= 1.4f => 3,
+                >= 1.2f => 4,
+                >= 1.0f => 5,
+                _ => 7
+            };
+        }
+    }
 
 #if IL2CPP
     private static DialogueHandler _handler;
@@ -106,7 +123,7 @@ public static class DialoguePagingPatches
     {
         try
         {
-            if (choices == null || choices.Count <= 8)
+            if (choices == null || choices.Count <= ChoicesPerPage+1)
             {
                 ClearPagingIfNewNode(diag, node);
                 return;
@@ -148,7 +165,7 @@ public static class DialoguePagingPatches
     {
         try
         {
-            if (choices == null || choices.Count <= 8)
+            if (choices == null || choices.Count <= ChoicesPerPage+1)
             {
                 ClearPagingIfNewNode(diag, node);
                 return;
@@ -337,7 +354,7 @@ public static class DialoguePagingPatches
 
     private static int ComputePageCount(int totalChoices)
     {
-        if (totalChoices <= 8) return 0;
+        if (totalChoices <= ChoicesPerPage+1) return 0;
         return (totalChoices + ChoicesPerPage - 1) / ChoicesPerPage;
     }
 
