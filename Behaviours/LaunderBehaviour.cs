@@ -1,4 +1,5 @@
-﻿using BusinessEmployment.BetterSafe;
+﻿using System.Collections;
+using BusinessEmployment.BetterSafe;
 using BusinessEmployment.Helpers;
 using BusinessEmployment.Persistence;
 using MelonLoader;
@@ -280,12 +281,7 @@ public class LaunderBehaviour
             var toDeposit = Math.Min(SaveData.MoneyLeftToLaunder, availableCapacity);
             propertyAsBusiness.StartLaunderingOperation(toDeposit);
             SaveData.MoneyLeftToLaunder -= toDeposit;
-            NotificationsManager.Instance.SendNotification($"{property.PropertyName} Worker",
-                $"Deposited {MoneyManager.FormatAmount(toDeposit)}.",
-                SafeCreator.SafeIcon, 8f);
-            NotificationsManager.Instance.SendNotification($"{property.PropertyName} Worker",
-                $"Total: {MoneyManager.FormatAmount(propertyAsBusiness.currentLaunderTotal)}/{MoneyManager.FormatAmount(propertyAsBusiness.LaunderCapacity)}.",
-                SafeCreator.SafeIcon, 8f);
+            MelonCoroutines.Start(SendNotificationDelayed(toDeposit));
         }
 
         state = ELaunderEmployeeState.Idle;
@@ -330,6 +326,17 @@ public class LaunderBehaviour
                 pse.SaveFolderName != null &&
                 pse.SaveFolderName.Contains(SafeCreator.SAFE_ID)
             )!; // Safes last (false < true)
+    }
+
+    private IEnumerator SendNotificationDelayed(float toDeposit)
+    {
+        yield return new WaitForSeconds(2.5f);
+        NotificationsManager.Instance.SendNotification($"{property.PropertyName} Worker",
+            $"Deposited {MoneyManager.FormatAmount(toDeposit)}.",
+            SafeCreator.SafeIcon, 8f);
+        NotificationsManager.Instance.SendNotification($"{property.PropertyName} Worker",
+            $"Total: {MoneyManager.FormatAmount(propertyAsBusiness.currentLaunderTotal)}/{MoneyManager.FormatAmount(propertyAsBusiness.LaunderCapacity)}.",
+            SafeCreator.SafeIcon, 8f);
     }
 
     public static void Remove(Packager employee)
