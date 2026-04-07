@@ -52,22 +52,28 @@ internal class BusinessPostAwake
 
     private static void AddBusinessToEntries(Business business)
     {
-        var entry = BusinessEmployment.CapacityCategory.CreateEntry($"{business.PropertyName}_Capacity",
-            business.LaunderCapacity,
-            $"Capacity of {business.PropertyName}",
-            "Used for determining how much cash can be laundered at a time in this business.",
-            validator: new ValueRange<float>(1f, 100_000f));
-        entry.OnEntryValueChanged.Subscribe((oldValue, newValue) =>
+        MelonPreferences_Entry<float> existingEntry = null!;
+        if (BusinessEmployment.CapacityCategory.HasEntry($"{business.PropertyName}_Capacity"))
+            existingEntry = (MelonPreferences_Entry<float>)BusinessEmployment.CapacityCategory.GetEntry($"{business.PropertyName}_Capacity");
+        else
+            existingEntry = BusinessEmployment.CapacityCategory.CreateEntry($"{business.PropertyName}_Capacity",
+                business.LaunderCapacity,
+                $"Capacity of {business.PropertyName}",
+                "Used for determining how much cash can be laundered at a time in this business.",
+                validator: new ValueRange<float>(1f, 100_000f));
+        existingEntry.OnEntryValueChanged.Subscribe((oldValue, newValue) =>
         {
             if (Mathf.Approximately(oldValue, newValue)) return;
             ApplyAmount(business, newValue);
         });
-        ApplyAmount(business, entry.Value);
-        BusinessEmployment.BusinessCapacities.Add(entry);
+        ApplyAmount(business, existingEntry.Value);
+        BusinessEmployment.BusinessCapacities.Add(existingEntry);
         return;
 
         void ApplyAmount(Business b, float amount)
         {
+            if (b == null) return;
+            if (!BusinessEmployment.CustomizeLaunderLimits.Value) return;
             b.LaunderCapacity = amount;
             var containerObj = GetMemberValue(b, "Container");
 

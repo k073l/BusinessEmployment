@@ -1,5 +1,7 @@
 # Changelog
 
+## 1.0.8
+- Fix: Multiple entry creation attempts leading to laundering limits breaking
 ## 1.0.7
 - Fix: Dynamically adjust max choices shown in hiring dialogue based on the UI scale to prevent the dialogue from becoming unusable at higher scales
 - Feat: Add configuration options for laundering capacities per Business

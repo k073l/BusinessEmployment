@@ -29,7 +29,7 @@ public static class BuildInfo
     public const string Name = "BusinessEmployment";
     public const string Description = "Adds employees to Businesses. Automates laundering.";
     public const string Author = "k073l";
-    public const string Version = "1.0.7";
+    public const string Version = "1.0.8";
 }
 
 public class BusinessEmployment : MelonMod
@@ -41,6 +41,7 @@ public class BusinessEmployment : MelonMod
     internal static MelonPreferences_Entry<bool> EnableSafeAutoRestock;
     internal static MelonPreferences_Category CapacityCategory;
     internal static HashSet<MelonPreferences_Entry> BusinessCapacities = [];
+    internal static MelonPreferences_Entry<bool> CustomizeLaunderLimits;
 
     public override void OnInitializeMelon()
     {
@@ -58,6 +59,10 @@ public class BusinessEmployment : MelonMod
             "Enable Golden Safe Auto-Restock",
             "If enabled, businesses with employees will automatically restock their Golden Safes when you sleep.");
         CapacityCategory = MelonPreferences.CreateCategory("BusinessEmployment_BusinessCapacity", "Business Laundering Limit Settings");
+        CustomizeLaunderLimits = CapacityCategory.CreateEntry("BusinessEmploymentCustomizeLaunderLimits", true,
+            "Enable Launder Limit Customization",
+            "If enabled, custom laundering limits defined in this category will be applied");
+        
 
         GameLifecycle.OnPreLoad += CreateSafe;
     }
