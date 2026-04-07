@@ -1,4 +1,6 @@
 # BusinessEmployment
+IL2CPP: [![MLVScan IL2CPP](https://mlvscan.com/attestations/att_BIdYRY93WsgDTdgNYxrAx4Eu/badge.svg?style=split-pill)](https://mlvscan.com/attestations/att_BIdYRY93WsgDTdgNYxrAx4Eu)
+Mono: [![MLVScan Mono](https://mlvscan.com/attestations/att_G5AU_nOBzhhJQLgJUoSvIvd_/badge.svg?style=split-pill)](https://mlvscan.com/attestations/att_G5AU_nOBzhhJQLgJUoSvIvd_)
 
 Adds the ability to assign employees to your businesses.
 
