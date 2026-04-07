@@ -1,0 +1,308 @@
+﻿# .github/workflows/release.yml
+name: Build, Release, Attest
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  id-token: write
+  contents: write
+  packages: write
+  attestations: write
+  artifact-metadata: write
+
+env:
+  MLVSCAN_API_BASE_URL: ${{ vars.MLVSCAN_API_BASE_URL }}
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      project_name: ${{ steps.resolve.outputs.PROJECT_NAME }}
+      csproj_file: ${{ steps.resolve.outputs.CSPROJ_FILE }}
+      default_branch: ${{ steps.default_branch.outputs.name }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Resolve default branch
+        id: default_branch
+        run: |
+          echo "name=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5)" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve project name
+        id: resolve
+        run: |
+          CSPROJ_FILE=$(find . -type f -name "*.csproj" | head -n 1)
+          PROJECT_NAME=$(grep -oPm1 '(?<=<RootNamespace>)[^<]+' "$CSPROJ_FILE")
+          echo "PROJECT_NAME=$PROJECT_NAME" >> $GITHUB_OUTPUT
+          echo "CSPROJ_FILE=$CSPROJ_FILE" >> $GITHUB_OUTPUT
+
+  build:
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - configuration: IL2CPP
+            framework: net6
+          - configuration: Mono
+            framework: netstandard2.1
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '8.0.x'
+          source-url: ${{ vars.NUGET_SOURCE_URL }}
+        env:
+          NUGET_AUTH_TOKEN: ${{ secrets.NUGET_READ_TOKEN }}
+
+      - name: Remove post-build target
+        run: find . -type f -name "*.csproj" -exec sed -i '/<Import Project="build.events.postBuild.targets"/d' {} \;
+
+      - name: Restore dependencies
+        run: dotnet restore -p:Configuration=${{ matrix.configuration }} ${{ needs.prepare.outputs.csproj_file }}
+
+      - name: Build project
+        run: dotnet build -c ${{ matrix.configuration }} -f ${{ matrix.framework }} /p:ContinuousIntegrationBuild=true --no-restore ${{ needs.prepare.outputs.csproj_file }}
+
+      - name: Collect artifacts
+        run: |
+          mkdir -p artifacts
+          cp bin/${{ matrix.configuration }}/${{ matrix.framework }}/${{ needs.prepare.outputs.project_name }}-${{ matrix.configuration }}.dll artifacts/
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ needs.prepare.outputs.project_name }}-${{ matrix.configuration }}
+          path: artifacts/
+
+  mlvscan_il2cpp:
+    needs: [prepare, build]
+    uses: ./.github/workflows/mlvscan.yml
+    with:
+      dll_artifact: ${{ needs.prepare.outputs.project_name }}-IL2CPP
+      dll_name: ${{ needs.prepare.outputs.project_name }}-IL2CPP.dll
+      display_name: ${{ needs.prepare.outputs.project_name }} IL2CPP ${{ github.ref_name }}
+      canonical_source_url: ${{ format('https://github.com/{0}/commit/{1}', github.repository, github.sha) }}
+    secrets:
+      MLVSCAN_KEY: ${{ secrets.MLVSCAN_KEY }}
+
+  mlvscan_mono:
+    needs: [prepare, build]
+    uses: ./.github/workflows/mlvscan.yml
+    with:
+      dll_artifact: ${{ needs.prepare.outputs.project_name }}-Mono
+      dll_name: ${{ needs.prepare.outputs.project_name }}-Mono.dll
+      display_name: ${{ needs.prepare.outputs.project_name }} Mono ${{ github.ref_name }}
+      canonical_source_url: ${{ format('https://github.com/{0}/commit/{1}', github.repository, github.sha) }}
+    secrets:
+      MLVSCAN_KEY: ${{ secrets.MLVSCAN_KEY }}
+
+  update_readme:
+    needs: [prepare, mlvscan_il2cpp, mlvscan_mono]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout default branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.default_branch }}
+          fetch-depth: 0
+
+      - name: Prepare badge file
+        run: |
+          IL2CPP_BADGE="IL2CPP: [![MLVScan IL2CPP](${{ needs.mlvscan_il2cpp.outputs.badge_url }}?style=split-pill)](${{ needs.mlvscan_il2cpp.outputs.public_url }})"
+          MONO_BADGE="Mono: [![MLVScan Mono](${{ needs.mlvscan_mono.outputs.badge_url }}?style=split-pill)](${{ needs.mlvscan_mono.outputs.public_url }})"
+          printf '%s\n%s\n' "$IL2CPP_BADGE" "$MONO_BADGE" > /tmp/badges.txt
+
+      - name: Update README badges
+        run: |
+          sed -i '/MLVScan/d' README.md
+
+          insert_after=$(awk '
+            NR == 1 { next }
+            /^[[:space:]]*$/ {
+              if (last_badge > 0) { print last_badge; exit }
+              next
+            }
+            /^\[!\[/ { last_badge = NR; next }
+            {
+              if (last_badge > 0) { print last_badge }
+              else { print 1 }
+              exit
+            }
+            END {
+              if (last_badge > 0) { print last_badge }
+              else { print 1 }
+            }
+          ' README.md | head -1)
+
+          awk -v line="$insert_after" -v badges="$(cat /tmp/badges.txt)" '
+            { print }
+            NR == line { print badges }
+          ' README.md > README.md.tmp
+          mv README.md.tmp README.md
+
+      - name: Commit README badge update
+        run: |
+          git diff --quiet README.md && exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "chore: update MLVScan attestation badges [skip ci]"
+          git push origin HEAD:${{ needs.prepare.outputs.default_branch }}
+
+      - name: Write workflow summary
+        run: |
+          {
+            echo "## MLVScan Attestation"
+            echo "| Build | Public URL | Badge |"
+            echo "|-------|-----------|-------|"
+            echo "| IL2CPP | ${{ needs.mlvscan_il2cpp.outputs.public_url }} | ${{ needs.mlvscan_il2cpp.outputs.badge_url }} |"
+            echo "| Mono | ${{ needs.mlvscan_mono.outputs.public_url }} | ${{ needs.mlvscan_mono.outputs.badge_url }} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  nexus_readme:
+    needs: [prepare, update_readme]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout default branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.default_branch }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Convert README to BBCode
+        run: uv run assets/nexus-readme.py README.md README.bbcode
+
+      - name: Upload BBCode artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ needs.prepare.outputs.project_name }}-nexus-readme
+          path: README.bbcode
+
+      - name: Write BBCode to summary
+        run: |
+          {
+            echo "## Nexus README (BBCode)"
+            echo '```'
+            cat README.bbcode
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  package:
+    needs: [prepare, build, update_readme]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout default branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.default_branch }}
+
+      - name: Download IL2CPP artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.prepare.outputs.project_name }}-IL2CPP
+          path: bin/IL2CPP/net6/
+
+      - name: Download Mono artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.prepare.outputs.project_name }}-Mono
+          path: bin/Mono/netstandard2.1/
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Run packaging script
+        run: uv run assets/package.py
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ needs.prepare.outputs.project_name }}-package
+          path: dist/${{ needs.prepare.outputs.project_name }}.zip
+
+  attest_github:
+    needs: [prepare, package]
+    runs-on: ubuntu-latest
+    outputs:
+      attestation_url: ${{ steps.attest.outputs.attestation-url }}
+    steps:
+      - name: Download package artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.prepare.outputs.project_name }}-package
+          path: dist/
+
+      - name: GitHub attestation
+        id: attest
+        uses: actions/attest@v4
+        with:
+          subject-path: dist/${{ needs.prepare.outputs.project_name }}.zip
+
+  release:
+    needs: [prepare, package, attest_github, mlvscan_il2cpp, mlvscan_mono, update_readme, nexus_readme]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve release metadata
+        id: meta
+        run: |
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            TAG="${{ github.ref_name }}"
+          else
+            TAG=$(git rev-parse --short HEAD)
+          fi
+
+          LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          CURRENT_REF="${TAG}"
+
+          if [[ -n "$LAST_TAG" ]]; then
+            LOG=$(git log --oneline "${LAST_TAG}..HEAD")
+            CHANGELOG_URL="https://github.com/${{ github.repository }}/compare/${LAST_TAG}...${CURRENT_REF}"
+          else
+            LOG=$(git log --oneline)
+            CHANGELOG_URL="https://github.com/${{ github.repository }}/commits/${CURRENT_REF}"
+          fi
+
+          BODY=$(printf '%s\n\n**Full Changelog**: %s\n\n**GitHub Attestation**: %s\n**MLVScan IL2CPP Attestation**: %s\n**MLVScan Mono Attestation**: %s' \
+            "$LOG" \
+            "$CHANGELOG_URL" \
+            "${{ needs.attest_github.outputs.attestation_url }}" \
+            "${{ needs.mlvscan_il2cpp.outputs.public_url }}" \
+            "${{ needs.mlvscan_mono.outputs.public_url }}")
+
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          {
+            echo "body<<EOF"
+            echo "$BODY"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Download package artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.prepare.outputs.project_name }}-package
+          path: dist/
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.tag }}
+          name: ${{ needs.prepare.outputs.project_name }} ${{ steps.meta.outputs.tag }}
+          body: ${{ steps.meta.outputs.body }}
+          prerelease: ${{ github.event_name == 'workflow_dispatch' }}
+          files: dist/${{ needs.prepare.outputs.project_name }}.zip

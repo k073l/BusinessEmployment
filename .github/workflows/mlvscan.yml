@@ -1,0 +1,125 @@
+﻿# .github/workflows/mlvscan.yml
+name: MLVScan Attestation
+
+on:
+  workflow_call:
+    inputs:
+      dll_artifact:
+        description: 'Name of the artifact to download'
+        required: true
+        type: string
+      dll_name:
+        description: 'Filename of the DLL to scan'
+        required: true
+        type: string
+      display_name:
+        description: 'Public display name for the attestation'
+        required: true
+        type: string
+      canonical_source_url:
+        description: 'Canonical source URL for the attestation'
+        required: true
+        type: string
+    outputs:
+      badge_url:
+        description: 'MLVScan badge URL'
+        value: ${{ jobs.attest.outputs.badge_url }}
+      public_url:
+        description: 'MLVScan public attestation URL'
+        value: ${{ jobs.attest.outputs.public_url }}
+    secrets:
+      MLVSCAN_KEY:
+        required: true
+
+jobs:
+  attest:
+    runs-on: ubuntu-latest
+    outputs:
+      badge_url: ${{ steps.publish.outputs.badge_url }}
+      public_url: ${{ steps.publish.outputs.public_url }}
+    steps:
+      - name: Resolve MLVScan API base URL
+        id: api-base
+        run: |
+          resolved="${MLVSCAN_API_BASE_URL:-https://api.mlvscan.com}"
+          echo "base_url=${resolved}" >> "$GITHUB_OUTPUT"
+        env:
+          MLVSCAN_API_BASE_URL: ${{ vars.MLVSCAN_API_BASE_URL }}
+
+      - name: Download DLL artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.dll_artifact }}
+          path: dlls/
+
+      - name: Upload for scanning
+        id: upload
+        env:
+          MLVSCAN_API_KEY: ${{ secrets.MLVSCAN_KEY }}
+        run: |
+          status=$(curl --silent --show-error \
+            -o upload.json -w "%{http_code}" \
+            -X POST "${{ steps.api-base.outputs.base_url }}/files" \
+            -H "X-API-Key: ${MLVSCAN_API_KEY}" \
+            -F "file=@dlls/${{ inputs.dll_name }}")
+          [[ "$status" -lt 200 || "$status" -ge 300 ]] && { cat upload.json; exit 1; }
+          echo "submission_id=$(jq -r '.data.id' upload.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Wait for scan report
+        id: report
+        env:
+          MLVSCAN_API_KEY: ${{ secrets.MLVSCAN_KEY }}
+        run: |
+          for attempt in $(seq 1 60); do
+            status=$(curl --silent --show-error \
+              -o report.json -w "%{http_code}" \
+              -H "X-API-Key: ${MLVSCAN_API_KEY}" \
+              "${{ steps.api-base.outputs.base_url }}/reports/${{ steps.upload.outputs.submission_id }}")
+            SCAN_STATUS=$(jq -r '.status // empty' report.json)
+            [[ "$SCAN_STATUS" == "completed" ]] && exit 0
+            [[ "$SCAN_STATUS" == "failed" ]] && { echo "Scan failed"; cat report.json; exit 1; }
+            if [[ "$status" == "404" ]]; then
+              error_msg=$(jq -r '.error // empty' report.json)
+              if [[ "$error_msg" == "Submission not found" || "$error_msg" == "Report not found" ]]; then
+                echo "Waiting for submission to materialize (attempt ${attempt}/60)..."
+                sleep 10
+                continue
+              fi
+            fi
+            [[ "$status" -ge 400 ]] && { cat report.json; exit 1; }
+            echo "Status: ${SCAN_STATUS:-pending} (attempt ${attempt}/60)"
+            sleep 10
+          done
+          echo "::error::Timed out waiting for scan report"
+          exit 1
+
+      - name: Create draft attestation
+        id: draft
+        env:
+          MLVSCAN_API_KEY: ${{ secrets.MLVSCAN_KEY }}
+        run: |
+          status=$(curl --silent --show-error \
+            -o draft.json -w "%{http_code}" \
+            -X POST "${{ steps.api-base.outputs.base_url }}/automation/attestations" \
+            -H "X-API-Key: ${MLVSCAN_API_KEY}" \
+            -H "Content-Type: application/json" \
+            -d "$(jq -n \
+              --arg s "${{ steps.upload.outputs.submission_id }}" \
+              --arg n "${{ inputs.display_name }}" \
+              --arg u "${{ inputs.canonical_source_url }}" \
+              '{submissionId:$s,publicDisplayName:$n,canonicalSourceUrl:$u}')")
+          [[ "$status" -lt 200 || "$status" -ge 300 ]] && { cat draft.json; exit 1; }
+          echo "attestation_id=$(jq -r '.id' draft.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Publish attestation
+        id: publish
+        env:
+          MLVSCAN_API_KEY: ${{ secrets.MLVSCAN_KEY }}
+        run: |
+          status=$(curl --silent --show-error \
+            -o publish.json -w "%{http_code}" \
+            -X POST "${{ steps.api-base.outputs.base_url }}/automation/attestations/${{ steps.draft.outputs.attestation_id }}/publish" \
+            -H "X-API-Key: ${MLVSCAN_API_KEY}")
+          [[ "$status" -lt 200 || "$status" -ge 300 ]] && { cat publish.json; exit 1; }
+          echo "badge_url=$(jq -r '.badgeUrl' publish.json)" >> "$GITHUB_OUTPUT"
+          echo "public_url=$(jq -r '.publicUrl' publish.json)" >> "$GITHUB_OUTPUT"
