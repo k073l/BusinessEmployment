@@ -48,12 +48,12 @@
         <PackageReference Include="LavaGang.MelonLoader" Version="0.7.2" />
     </ItemGroup>
     <ItemGroup Label="IL2CPP-Refs" Condition="'$(IsMono)' != 'true'">
-        <PackageReference Include="RefGen.Schedule-I.Il2Cpp" Version="0.4.3-f3"/>
+        <PackageReference Include="RefGen.Schedule-I.Il2Cpp" Version="0.4.5-f1"/>
         <PackageReference Include="Il2CppInterop.Common" Version="1.5.1"/>
         <PackageReference Include="Il2CppInterop.Runtime" Version="1.5.1"/>
     </ItemGroup>
     <ItemGroup Label="Mono-Refs" Condition="'$(IsMono)' == 'true'">
-        <PackageReference Include="RefGen.Schedule-I.Mono" Version="0.4.3-f3"/>
+        <PackageReference Include="RefGen.Schedule-I.Mono" Version="0.4.5-f1"/>
     </ItemGroup>
 
     <!-- MelonLoader References -->
