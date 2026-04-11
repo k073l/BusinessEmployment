@@ -1,5 +1,7 @@
 # Changelog
 
+## 1.1.0
+- Feat: Add configuration option for Laundering Duration, allowing players to set how long it takes to launder cash.
 ## 1.0.9
 - Fix: Add checks for float inaccuracies
 ## 1.0.8

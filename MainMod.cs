@@ -6,6 +6,12 @@ using S1API.GameTime;
 using S1API.Lifecycle;
 using UnityEngine;
 
+#if MONO
+using ScheduleOne.Property;
+#else
+using Il2CppScheduleOne.Property;
+#endif
+
 [assembly: MelonInfo(
     typeof(BusinessEmployment.BusinessEmployment),
     BusinessEmployment.BuildInfo.Name,
@@ -29,7 +35,7 @@ public static class BuildInfo
     public const string Name = "BusinessEmployment";
     public const string Description = "Adds employees to Businesses. Automates laundering.";
     public const string Author = "k073l";
-    public const string Version = "1.0.9";
+    public const string Version = "1.1.0";
 }
 
 public class BusinessEmployment : MelonMod
@@ -42,6 +48,7 @@ public class BusinessEmployment : MelonMod
     internal static MelonPreferences_Category CapacityCategory;
     internal static HashSet<MelonPreferences_Entry> BusinessCapacities = [];
     internal static MelonPreferences_Entry<bool> CustomizeLaunderLimits;
+    internal static MelonPreferences_Entry<int> OperationDurationMins;
 
     public override void OnInitializeMelon()
     {
@@ -58,11 +65,15 @@ public class BusinessEmployment : MelonMod
         EnableSafeAutoRestock = _category.CreateEntry("BusinessEmploymentEnableSafeAutoRestock", true,
             "Enable Golden Safe Auto-Restock",
             "If enabled, businesses with employees will automatically restock their Golden Safes when you sleep.");
-        CapacityCategory = MelonPreferences.CreateCategory("BusinessEmployment_BusinessCapacity", "Business Laundering Limit Settings");
+        CapacityCategory = MelonPreferences.CreateCategory("BusinessEmployment_BusinessCapacity",
+            "Business Laundering Settings");
         CustomizeLaunderLimits = CapacityCategory.CreateEntry("BusinessEmploymentCustomizeLaunderLimits", true,
             "Enable Launder Limit Customization",
             "If enabled, custom laundering limits defined in this category will be applied");
-        
+        OperationDurationMins = CapacityCategory.CreateEntry("BusinessEmploymentOperationDurationMins", 1440,
+            "Laundering Operation Duration (mins)",
+            "Duration of a laundering operation in minutes. Defaults to 1440 (1 in-game day).",
+            validator: new ValueRange<int>(1, 10080));
 
         GameLifecycle.OnPreLoad += CreateSafe;
     }
@@ -78,6 +89,7 @@ public class BusinessEmployment : MelonMod
             case "Main":
                 MelonCoroutines.Start(AddDelayed());
                 TimeManager.OnSleepStart += SafeMethods.RefillSafe;
+                Business.onOperationStarted += (Action<LaunderingOperation>)UpdateDuration;
                 break;
         }
     }
@@ -88,6 +100,7 @@ public class BusinessEmployment : MelonMod
         try
         {
             TimeManager.OnSleepStart -= SafeMethods.RefillSafe;
+            Business.onOperationStarted -= (Action<LaunderingOperation>)UpdateDuration;
         }
         catch (Exception ex)
         {
@@ -108,5 +121,10 @@ public class BusinessEmployment : MelonMod
         if (SafeCreator.SafeAdded) yield break;
         _logger.Msg("Adding safe to the shop");
         SafeCreator.AddToShop();
+    }
+
+    private static void UpdateDuration(LaunderingOperation operation)
+    {
+        operation.completionTime_Minutes = OperationDurationMins.Value;
     }
 }
