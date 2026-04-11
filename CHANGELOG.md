@@ -1,5 +1,7 @@
 # Changelog
 
+## 1.0.9
+- Fix: Add checks for float inaccuracies
 ## 1.0.8
 - Fix: Multiple entry creation attempts leading to laundering limits breaking
 ## 1.0.7

@@ -5,7 +5,7 @@
         <!-- Testing props, comment or uncomment what you need -->
         <!--<DefineConstants>$(DefineConstants);TestMultiplayer</DefineConstants>-->
         <!--<DefineConstants>$(DefineConstants);UnityExplorer</DefineConstants>-->
-        <!-- <DefineConstants>$(DefineConstants);DEBUG</DefineConstants> -->
+         <DefineConstants>$(DefineConstants);DEBUG</DefineConstants> 
 
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>

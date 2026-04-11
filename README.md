@@ -26,6 +26,9 @@ Adds the ability to assign employees to your businesses.
       - When you sleep, your handler will **automatically refill the safe** with cash from your pocket, fully automating your laundering (as long as the locker has cash to pay them) *(configurable)*.
       - They will take a small payment for this service *(configurable)*.
 
+- **Configurable laundering limits:**
+   - Set maximum laundering capacities for each business. Configurable per business, capped at 100k. Can be adjusted at runtime, using [ModsApp](https://thunderstore.io/c/schedule-i/p/k0Mods/ModsApp/) or any other mod preferences manager.
+
 ## Screenshots
 
 ![Employee moving cash](https://i.imgur.com/a2Mrczr.jpeg)

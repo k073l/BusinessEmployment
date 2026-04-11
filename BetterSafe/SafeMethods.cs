@@ -57,13 +57,16 @@ public class SafeMethods
                     if (cash != null)
                     {
                         var needed = cashStackLimit - cash.Balance;
+                        MelonDebug.Msg($"Safe slot {slot.SlotIndex} needs {needed}");
                         toInsert = needed;
                     }
                 }
                 else
                 {
+                    MelonDebug.Msg($"Safe slot {slot.SlotIndex} is empty, asking for max amnt");
                     toInsert = cashStackLimit;
                 }
+                if (toInsert <= 0.1f) continue;
 
                 // Check if we can afford this insertion + its cut
                 var projectedTotal = totalInserted + toInsert;
@@ -75,6 +78,8 @@ public class SafeMethods
                     var maxAffordable = playerCash / cutMultiplier;
                     toInsert = maxAffordable - totalInserted;
                 }
+
+                MelonDebug.Msg($"Safe slot {slot.SlotIndex}, total amount after fee {toInsert}");
 
                 if (toInsert > 0)
                 {
@@ -96,7 +101,9 @@ public class SafeMethods
 
         var totalCut = totalInserted * (percentageCut / 100f);
         var totalCost = totalInserted + totalCut;
-        MoneyManager.Instance.ChangeCashBalance(-totalCost);
+        if (totalCost <= 0.1f) totalCost = 0f;
+        if (totalCost > 0)
+            MoneyManager.Instance.ChangeCashBalance(-totalCost);
         Melon<BusinessEmployment>.Logger.Msg(
             $"Refilled safes! Inserted: {totalInserted}, Employee cut: {totalCut}, Total cost: {totalCost}");
         if (totalCost > 0)
