@@ -40,7 +40,7 @@ internal class BusinessPostAwake
 
         var idlePoints = new GameObject("EmployeeIdlePoints");
         idlePoints.transform.SetParent(__instance.transform);
-        var newIdlePoint = Object.Instantiate(spawnPoint, spawnPoint.position, spawnPoint.rotation);
+        var newIdlePoint = BusinessEmployment.EnableAlternateIdlePositions.Value ? AlternateIdlePointRegistry.GetPointTransform(__instance) : Object.Instantiate(spawnPoint, spawnPoint.position, spawnPoint.rotation);
         newIdlePoint.transform.SetParent(idlePoints.transform);
         var transformList = new List<Transform> { newIdlePoint };
 
@@ -52,22 +52,18 @@ internal class BusinessPostAwake
 
     private static void AddBusinessToEntries(Business business)
     {
-        MelonPreferences_Entry<float> existingEntry = null!;
-        if (BusinessEmployment.CapacityCategory.HasEntry($"{business.PropertyName}_Capacity"))
-            existingEntry = (MelonPreferences_Entry<float>)BusinessEmployment.CapacityCategory.GetEntry($"{business.PropertyName}_Capacity");
-        else
-            existingEntry = BusinessEmployment.CapacityCategory.CreateEntry($"{business.PropertyName}_Capacity",
-                business.LaunderCapacity,
-                $"Capacity of {business.PropertyName}",
-                "Used for determining how much cash can be laundered at a time in this business.",
-                validator: new ValueRange<float>(1f, 100_000f));
-        existingEntry.OnEntryValueChanged.Subscribe((oldValue, newValue) =>
+        var entry = BusinessEmployment.CapacityCategory.GetOrCreateEntry<float>($"{business.PropertyName}_Capacity",
+            business.LaunderCapacity,
+            $"Capacity of {business.PropertyName}",
+            "Used for determining how much cash can be laundered at a time in this business.",
+            validator: new ValueRange<float>(1f, 100_000f));
+        entry.OnEntryValueChanged.Subscribe((oldValue, newValue) =>
         {
             if (Mathf.Approximately(oldValue, newValue)) return;
             ApplyAmount(business, newValue);
         });
-        ApplyAmount(business, existingEntry.Value);
-        BusinessEmployment.BusinessCapacities.Add(existingEntry);
+        ApplyAmount(business, entry.Value);
+        BusinessEmployment.BusinessCapacities.Add(entry);
         return;
 
         void ApplyAmount(Business b, float amount)

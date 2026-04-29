@@ -35,7 +35,7 @@ public static class BuildInfo
     public const string Name = "BusinessEmployment";
     public const string Description = "Adds employees to Businesses. Automates laundering.";
     public const string Author = "k073l";
-    public const string Version = "1.1.0";
+    public const string Version = "1.1.1";
 }
 
 public class BusinessEmployment : MelonMod
@@ -45,6 +45,7 @@ public class BusinessEmployment : MelonMod
     internal static MelonPreferences_Entry<float> EmpCut;
     internal static MelonPreferences_Entry<float> SafeCost;
     internal static MelonPreferences_Entry<bool> EnableSafeAutoRestock;
+    internal static MelonPreferences_Entry<bool> EnableAlternateIdlePositions;
     internal static MelonPreferences_Category CapacityCategory;
     internal static HashSet<MelonPreferences_Entry> BusinessCapacities = [];
     internal static MelonPreferences_Entry<bool> CustomizeLaunderLimits;
@@ -65,6 +66,9 @@ public class BusinessEmployment : MelonMod
         EnableSafeAutoRestock = _category.CreateEntry("BusinessEmploymentEnableSafeAutoRestock", true,
             "Enable Golden Safe Auto-Restock",
             "If enabled, businesses with employees will automatically restock their Golden Safes when you sleep.");
+        EnableAlternateIdlePositions = _category.CreateEntry("BusinessEmploymentEnableAlternateIdlePositions", false,
+            "Enable Alternate Idle Positions",
+            "If enabled, business employees will idle in a different place than default. Requires restart.");
         CapacityCategory = MelonPreferences.CreateCategory("BusinessEmployment_BusinessCapacity",
             "Business Laundering Settings");
         CustomizeLaunderLimits = CapacityCategory.CreateEntry("BusinessEmploymentCustomizeLaunderLimits", true,
