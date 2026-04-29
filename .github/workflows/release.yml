@@ -89,6 +89,8 @@ jobs:
     with:
       dll_artifact: ${{ needs.prepare.outputs.project_name }}-IL2CPP
       dll_name: ${{ needs.prepare.outputs.project_name }}-IL2CPP.dll
+      artifact_key: ${{ needs.prepare.outputs.project_name }}/il2cpp
+      artifact_version: ${{ github.ref_name }}
       display_name: ${{ needs.prepare.outputs.project_name }} IL2CPP ${{ github.ref_name }}
       canonical_source_url: ${{ format('https://github.com/{0}/commit/{1}', github.repository, github.sha) }}
     secrets:
@@ -100,6 +102,8 @@ jobs:
     with:
       dll_artifact: ${{ needs.prepare.outputs.project_name }}-Mono
       dll_name: ${{ needs.prepare.outputs.project_name }}-Mono.dll
+      artifact_key: ${{ needs.prepare.outputs.project_name }}/mono
+      artifact_version: ${{ github.ref_name }}
       display_name: ${{ needs.prepare.outputs.project_name }} Mono ${{ github.ref_name }}
       canonical_source_url: ${{ format('https://github.com/{0}/commit/{1}', github.repository, github.sha) }}
     secrets:
@@ -117,8 +121,8 @@ jobs:
 
       - name: Prepare badge file
         run: |
-          IL2CPP_BADGE="IL2CPP: [![MLVScan IL2CPP](${{ needs.mlvscan_il2cpp.outputs.badge_url }}?style=split-pill)](${{ needs.mlvscan_il2cpp.outputs.public_url }})"
-          MONO_BADGE="Mono: [![MLVScan Mono](${{ needs.mlvscan_mono.outputs.badge_url }}?style=split-pill)](${{ needs.mlvscan_mono.outputs.public_url }})"
+          IL2CPP_BADGE="[![MLVScan IL2CPP](${{ needs.mlvscan_il2cpp.outputs.badge_url }})](${{ needs.mlvscan_il2cpp.outputs.public_url }})"
+          MONO_BADGE="[![MLVScan Mono](${{ needs.mlvscan_mono.outputs.badge_url }})](${{ needs.mlvscan_mono.outputs.public_url }})"
           printf '%s\n%s\n' "$IL2CPP_BADGE" "$MONO_BADGE" > /tmp/badges.txt
 
       - name: Update README badges

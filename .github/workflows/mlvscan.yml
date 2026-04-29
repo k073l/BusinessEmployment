@@ -12,6 +12,14 @@ on:
         description: 'Filename of the DLL to scan'
         required: true
         type: string
+      artifact_key:
+        description: 'Stable artifact key for this lineage (e.g. your-mod/mono)'
+        required: true
+        type: string
+      artifact_version:
+        description: 'Version string for display (e.g. v1.0.0)'
+        required: true
+        type: string
       display_name:
         description: 'Public display name for the attestation'
         required: true
@@ -104,11 +112,21 @@ jobs:
             -H "X-API-Key: ${MLVSCAN_API_KEY}" \
             -H "Content-Type: application/json" \
             -d "$(jq -n \
-              --arg s "${{ steps.upload.outputs.submission_id }}" \
-              --arg n "${{ inputs.display_name }}" \
-              --arg u "${{ inputs.canonical_source_url }}" \
-              '{submissionId:$s,publicDisplayName:$n,canonicalSourceUrl:$u}')")
+              --arg submissionId "${{ steps.upload.outputs.submission_id }}" \
+              --arg artifactKey "${{ inputs.artifact_key }}" \
+              --arg artifactVersion "${{ inputs.artifact_version }}" \
+              --arg publicDisplayName "${{ inputs.display_name }}" \
+              --arg canonicalSourceUrl "${{ inputs.canonical_source_url }}" \
+              '{submissionId:$submissionId,artifactKey:$artifactKey,artifactVersion:$artifactVersion,publicDisplayName:$publicDisplayName,canonicalSourceUrl:$canonicalSourceUrl}')")
           [[ "$status" -lt 200 || "$status" -ge 300 ]] && { cat draft.json; exit 1; }
+
+          artifact_key_source=$(jq -r '.artifactKeySource // "explicit"' draft.json)
+          if [[ "$artifact_key_source" == "inferred" ]]; then
+            resolved_key=$(jq -r '.artifactKey' draft.json)
+            echo "::warning::MLVScan inferred artifactKey as ${resolved_key}. Set artifactKey explicitly for stable replacement behavior."
+            jq -r '.warnings[]?' draft.json
+          fi
+
           echo "attestation_id=$(jq -r '.id' draft.json)" >> "$GITHUB_OUTPUT"
 
       - name: Publish attestation
