@@ -22,7 +22,7 @@ namespace BusinessEmployment.Patches;
 internal class BusinessPostAwake
 {
     [HarmonyPatch("Awake")]
-    [HarmonyPostfix]
+    [HarmonyPrefix]
     private static void AddIdlePointAndEmployeeCapacity(Business __instance)
     {
         if (__instance == null)
@@ -47,6 +47,17 @@ internal class BusinessPostAwake
         __instance.EmployeeIdlePoints = transformList.ToArray();
         __instance.EmployeeCapacity = 1;
 
+    }
+
+    [HarmonyPatch("Awake")]
+    [HarmonyPostfix]
+    private static void AddToEntries(Business __instance)
+    {
+        if (__instance == null)
+        {
+            Melon<BusinessEmployment>.Logger.Error("Business instance is null");
+            return;
+        }
         AddBusinessToEntries(__instance);
     }
 
