@@ -251,7 +251,7 @@ public static class DialoguePagingPatches
         }
     }
 
-    [HarmonyPatch("EndDialogue")]
+    [HarmonyPatch("OnClose")]
     [HarmonyPostfix]
     private static void EndDialoguePostfix()
     {

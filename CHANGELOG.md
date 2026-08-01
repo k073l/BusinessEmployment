@@ -1,6 +1,8 @@
 # Changelog
 
 ## 1.1.1
+- chore: Compatibility with game version 0.4.6-f11
+## 1.1.1
 - Feat: Alternate idle points available through MelonPreferences
 ## 1.1.0
 - Feat: Add configuration option for Laundering Duration, allowing players to set how long it takes to launder cash.

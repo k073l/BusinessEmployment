@@ -5,7 +5,7 @@
         <!-- Testing props, comment or uncomment what you need -->
         <!--<DefineConstants>$(DefineConstants);TestMultiplayer</DefineConstants>-->
         <!--<DefineConstants>$(DefineConstants);UnityExplorer</DefineConstants>-->
-         <DefineConstants>$(DefineConstants);DEBUG</DefineConstants> 
+<!--         <DefineConstants>$(DefineConstants);DEBUG</DefineConstants> -->
 
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
@@ -48,12 +48,12 @@
         <PackageReference Include="LavaGang.MelonLoader" Version="0.7.2" />
     </ItemGroup>
     <ItemGroup Label="IL2CPP-Refs" Condition="'$(IsMono)' != 'true'">
-        <PackageReference Include="RefGen.Schedule-I.Il2Cpp" Version="0.4.5-f1"/>
+        <PackageReference Include="RefGen.Schedule-I.Il2Cpp" Version="0.4.6-f11"/>
         <PackageReference Include="Il2CppInterop.Common" Version="1.5.1"/>
         <PackageReference Include="Il2CppInterop.Runtime" Version="1.5.1"/>
     </ItemGroup>
     <ItemGroup Label="Mono-Refs" Condition="'$(IsMono)' == 'true'">
-        <PackageReference Include="RefGen.Schedule-I.Mono" Version="0.4.5-f1"/>
+        <PackageReference Include="RefGen.Schedule-I.Mono" Version="0.4.6-f11"/>
     </ItemGroup>
 
     <!-- MelonLoader References -->
