@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.1.1
+## 1.1.2
 - chore: Compatibility with game version 0.4.6-f11
 ## 1.1.1
 - Feat: Alternate idle points available through MelonPreferences
