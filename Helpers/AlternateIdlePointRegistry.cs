@@ -43,6 +43,13 @@ public static class AlternateIdlePointRegistry
                 Rotation = Quaternion.Euler(0f, 180f, 0f)
             }
         },
+        {
+            "hylandmedical", new IdlePoint()
+            {
+                Position = new Vector3(103.84f, 0.1f, 71.7f),
+                Rotation = Quaternion.Euler(0f, 0f, 0f)
+            }
+        },
     };
 
     public static Transform GetPointTransform(Business business)
