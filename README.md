@@ -1,6 +1,6 @@
 # BusinessEmployment
-[![MLVScan IL2CPP](https://mlvscan.com/attestations/att_6iWRfca_RmiW0KSXAM4mrcCE/badge.svg)](https://mlvscan.com/attestations/att_6iWRfca_RmiW0KSXAM4mrcCE)
-[![MLVScan Mono](https://mlvscan.com/attestations/att_D2jZjMlzapJ_i3CbOvObw6bh/badge.svg)](https://mlvscan.com/attestations/att_D2jZjMlzapJ_i3CbOvObw6bh)
+[![MLVScan IL2CPP](https://mlvscan.com/attestations/att_EsdUl3OB38rlTfygpRkDXTV_/badge.svg)](https://mlvscan.com/attestations/att_EsdUl3OB38rlTfygpRkDXTV_)
+[![MLVScan Mono](https://mlvscan.com/attestations/att_zxfTeskWecobWb-o3OPZSMGQ/badge.svg)](https://mlvscan.com/attestations/att_zxfTeskWecobWb-o3OPZSMGQ)
 
 Adds the ability to assign employees to your businesses.
 
