@@ -1,5 +1,7 @@
 # Changelog
 
+## 1.1.3
+- Added an alternate idle point for Hyland Medical (0.4.7f12 support)
 ## 1.1.2
 - chore: Compatibility with game version 0.4.6-f11
 ## 1.1.1
